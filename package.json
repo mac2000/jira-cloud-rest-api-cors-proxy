@@ -1,0 +1,15 @@
+{
+  "name": "jira-cloud-rest-api-cors-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "cors": "^2.8.3",
+    "express": "^4.15.2",
+    "node-rest-client": "^3.1.0"
+  }
+}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8" />
+		<title>jira</title>
+		<style>
+			body:not(.loading) .loading,
+			body:not(.anonymous) .anonymous,
+			body:not(.authorized) .authorized {
+				display: none
+			}
+
+		</style>
+	</head>
+
+	<body class="loading">
+		<h3 id="title">Jira API Proxy Demo</h3>
+
+		<div class="loading">Loading&hellip;</div>
+		<div class="anonymous">
+			<form id="loginForm">
+				<input type="text" id="username" title="username" />
+				<input type="password" id="password" title="password" />
+				<input type="submit" value="Submit">
+			</form>
+		</div>
+		<div class="authorized">
+			<button id="logout">logout</button>
+			<table>
+				<tr>
+					<td valign="top">
+						<h5>Projects</h5>
+						<ol id="projects">
+							<li>Loading&hellip;</li>
+						</ol>
+					</td>
+					<td valign="top">
+						<h5>Issues</h5>
+						<ol id="issues">
+							<li>Loading&hellip;</li>
+						</ol>
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<hr />
+		<a href="https://docs.atlassian.com/jira/REST/cloud/">api docs</a>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.1/axios.js"></script>
+		<script>
+			axios.defaults.headers.common['Authorization'] = localStorage.getItem('AUTH_TOKEN')
+
+			const renderToList = (id, mapper) => res => {
+				document.getElementById(id).innerHTML = mapper(res.data).map(i => `<li>${i}</li>`).join('')
+			}
+
+			const getProjects = () => axios.get('/rest/api/2/project')
+				.then(renderToList('projects', data => data.map(p => p.name)))
+
+			const getClosedBugs = () => axios.post('/rest/api/2/search', { jql: 'type=Bug AND status=Closed' })
+				.then(renderToList('issues', data => data.issues.map(i => i.fields.summary)))
+
+			const getUser = () => axios.get('/rest/auth/1/session')
+				.then(res => {
+					title.innerText = `Hello ${res.data.name}`
+					document.body.className = 'authorized'
+					getProjects()
+					getClosedBugs()
+				})
+				.catch(err => document.body.className = 'anonymous')
+
+
+
+
+			if (!axios.defaults.headers.common['Authorization']) {
+				document.body.className = 'anonymous'
+			} else {
+				getUser()
+			}
+
+			loginForm.addEventListener('submit', event => {
+				event.preventDefault()
+				axios.post('/rest/auth/1/session', { username: username.value, password: password.value })
+					.then(res => {
+						axios.defaults.headers.common['Authorization'] = res.data.session.value
+						localStorage.setItem('AUTH_TOKEN', res.data.session.value)
+						getUser()
+					})
+					.catch(console.log)
+			})
+
+			logout.addEventListener('click', event => {
+				event.preventDefault()
+				axios.delete('/rest/auth/1/session')
+					.then(() => {
+						delete axios.defaults.headers.common['Authorization']
+						localStorage.removeItem('AUTH_TOKEN')
+						document.body.className = 'anonymous'
+						title.innerText = 'Jira API Proxy Demo'
+					})
+			})
+		</script>
+	</body>
+
+</html>
