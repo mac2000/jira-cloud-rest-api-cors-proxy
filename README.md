@@ -1,5 +1,7 @@
 # Jira API
 
+[Online demo](http://jiraapi.azurewebsites.net)
+
 There is [feature request](https://jira.atlassian.com/browse/JRASERVER-30371) from 2012 asking Atlassian to do something about CORS support.
 
 This repository demonstrates simplest possible workaround
