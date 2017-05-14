@@ -13,6 +13,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 app.use((req, res, next) => {
+	const url = `${jira}${req.path}`
+
 	const params = {
 		headers: {
 			cookie: `cloud.session.token=${req.headers.authorization}`,
@@ -22,7 +24,19 @@ app.use((req, res, next) => {
 		parameters: req.query
 	}
 
-	client[req.method.toLowerCase()](`${jira}${req.path}`, params, (data, response) => {
+	client[req.method.toLowerCase()](url, params, (data, response) => {
+		if (response.statusCode !== 200) {
+			if (Buffer.isBuffer(data)) {
+				data = {
+					data: data.toString('utf8')
+				}
+			}
+			data.proxied = {
+				url,
+				data: req.body,
+				parameters: req.query
+			}
+		}
 		res.status(response.statusCode).json(data)
 	})
 })
