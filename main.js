@@ -18,7 +18,7 @@ app.use((req, res, next) => {
 			cookie: `cloud.session.token=${req.headers.authorization}`,
 			'Content-Type': 'application/json'
 		},
-		data: req.body
+		data: Object.assign({}, req.query || {}, req.body || {})
 	}
 
 	client[req.method.toLowerCase()](`${jira}${req.path}`, params, (data, response) => {
